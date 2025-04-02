@@ -15,6 +15,9 @@
         .file-list { list-style: none; padding: 0; }
         .file-item { display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid #ddd; }
         .guid-box { margin-top: 20px; font-weight: bold; }
+        .form-selector { margin-top: 20px; }
+        .form-image { display: none; width: 100px; height: auto; margin-top: 10px; }
+        .dependent-selector { display: none; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -22,6 +25,22 @@
     <div id="drop-zone" class="drop-zone">Drag & Drop files here or click to select</div>
     <input type="file" id="file-input" multiple accept=".zip,.pdf" style="display: none;">
     <ul id="file-list" class="file-list"></ul>
+    
+    <div class="form-selector">
+        <label for="form-select">Select a Form:</label>
+        <select id="form-select">
+            <option value="">--Choose a Form--</option>
+            <option value="form1" data-img="form1.png">Form 1</option>
+            <option value="form2" data-img="form2.png">Form 2</option>
+        </select>
+        <img id="form-image" class="form-image" src="" alt="Form Preview">
+    </div>
+    
+    <div class="dependent-selector">
+        <label for="dependent-select">Select an Option:</label>
+        <select id="dependent-select"></select>
+    </div>
+    
     <button id="upload-btn">Upload</button>
     <div id="guid-box" class="guid-box"></div>
 
@@ -31,6 +50,10 @@
         const fileList = document.getElementById("file-list");
         const uploadBtn = document.getElementById("upload-btn");
         const guidBox = document.getElementById("guid-box");
+        const formSelect = document.getElementById("form-select");
+        const formImage = document.getElementById("form-image");
+        const dependentSelect = document.getElementById("dependent-select");
+        const dependentSelector = document.querySelector(".dependent-selector");
         let files = [];
 
         dropZone.addEventListener("click", () => fileInput.click());
@@ -78,6 +101,29 @@
                 alert("Upload failed.");
             }
         });
+
+        formSelect.addEventListener("change", () => {
+            let selectedOption = formSelect.options[formSelect.selectedIndex];
+            if (selectedOption.value) {
+                formImage.src = selectedOption.getAttribute("data-img");
+                formImage.style.display = "block";
+                dependentSelector.style.display = "block";
+                updateDependentOptions(selectedOption.value);
+            } else {
+                formImage.style.display = "none";
+                dependentSelector.style.display = "none";
+            }
+        });
+
+        function updateDependentOptions(formValue) {
+            dependentSelect.innerHTML = "";
+            let options = formValue === "form1" ? ["Option A", "Option B"] : ["Option X", "Option Y"];
+            options.forEach(opt => {
+                let option = document.createElement("option");
+                option.text = opt;
+                dependentSelect.add(option);
+            });
+        }
     </script>
 </body>
 </html>
