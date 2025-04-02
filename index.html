@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .drop-zone {
+            width: 100%; height: 150px; border: 2px dashed #ccc;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; cursor: pointer; margin-bottom: 20px;
+        }
+        .drop-zone.highlight { border-color: #007bff; }
+        .file-list { list-style: none; padding: 0; }
+        .file-item { display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid #ddd; }
+        .guid-box { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Upload ZIP/PDF Files</h2>
+    <div id="drop-zone" class="drop-zone">Drag & Drop files here or click to select</div>
+    <input type="file" id="file-input" multiple accept=".zip,.pdf" style="display: none;">
+    <ul id="file-list" class="file-list"></ul>
+    <button id="upload-btn">Upload</button>
+    <div id="guid-box" class="guid-box"></div>
+
+    <script>
+        const dropZone = document.getElementById("drop-zone");
+        const fileInput = document.getElementById("file-input");
+        const fileList = document.getElementById("file-list");
+        const uploadBtn = document.getElementById("upload-btn");
+        const guidBox = document.getElementById("guid-box");
+        let files = [];
+
+        dropZone.addEventListener("click", () => fileInput.click());
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("highlight");
+        });
+        dropZone.addEventListener("dragleave", () => dropZone.classList.remove("highlight"));
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.classList.remove("highlight");
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+
+        function handleFiles(selectedFiles) {
+            for (let file of selectedFiles) {
+                files.push(file);
+                let li = document.createElement("li");
+                li.classList.add("file-item");
+                li.innerHTML = `${file.name} <button onclick="removeFile('${file.name}')">X</button>`;
+                fileList.appendChild(li);
+            }
+        }
+
+        function removeFile(fileName) {
+            files = files.filter(f => f.name !== fileName);
+            document.querySelectorAll(".file-item").forEach(item => {
+                if (item.innerText.includes(fileName)) item.remove();
+            });
+        }
+
+        uploadBtn.addEventListener("click", async () => {
+            if (files.length === 0) return alert("No files selected.");
+            let formData = new FormData();
+            files.forEach(file => formData.append("files", file));
+            
+            let response = await fetch("/upload/", { method: "POST", body: formData });
+            let result = await response.json();
+            if (response.ok) {
+                guidBox.innerText = `GUID: ${result.guid}`;
+                fileList.innerHTML = "";
+                files = [];
+            } else {
+                alert("Upload failed.");
+            }
+        });
+    </script>
+</body>
+</html>
